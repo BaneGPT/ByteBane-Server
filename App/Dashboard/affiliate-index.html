@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaos C2 - Affiliate Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            chaos: {
+              50: '#fdf8f0', 100: '#faebe0', 200: '#f4d3b5', 300: '#eab778',
+              400: '#e09542', 500: '#d6781e', 600: '#c45f15', 700: '#a04512',
+              800: '#813713', 900: '#683013', 950: '#381507'
+            },
+            acc: {
+              emerald: '#10b981', emeraldDim: 'rgba(16,185,129,0.15)',
+              amber: '#f59e0b', amberDim: 'rgba(245,158,11,0.15)',
+              rose: '#f43f5e', roseDim: 'rgba(244,63,94,0.15)',
+              sky: '#0ea5e9', skyDim: 'rgba(14,165,233,0.15)',
+              violet: '#8b5cf6', violetDim: 'rgba(139,92,246,0.15)',
+              cyan: '#06b6d4', cyanDim: 'rgba(6,182,212,0.15)'
+            },
+            surface: {
+              950: '#050505', 900: '#0d0d0d', 850: '#141414', 
+              800: '#1c1c1c', 750: '#242424', 700: '#2d2d2d'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 2s linear infinite',
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+            'slide-in-right': 'slideInRight 0.3s ease-out'
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            slideInRight: { '0%': { opacity: '0', transform: 'translateX(10px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .bg-grid { background-image: linear-gradient(rgba(214,120,30,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(214,120,30,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+    .bg-radial { background: radial-gradient(ellipse at 50% 0%, rgba(214,120,30,0.08) 0%, transparent 70%), #050505; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #141414; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #4d4d4d; }
+    .glass { background: rgba(28,28,28,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(214,120,30,0.1); }
+    .glass-hover:hover { border-color: rgba(214,120,30,0.3); box-shadow: 0 0 30px -10px rgba(214,120,30,0.15); }
+    .btn-primary { background: #c45f15; color: white; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; transition: all 0.2s; }
+    .btn-primary:hover { background: #d6781e; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: #1c1c1c; color: #e5e5e5; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #374151; transition: all 0.2s; }
+    .btn-secondary:hover { background: #242424; }
+    .btn-secondary:active { transform: scale(0.98); }
+    .btn-ghost { color: #9ca3af; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; transition: all 0.2s; }
+    .btn-ghost:hover { color: white; background: #1c1c1c; }
+    .btn-danger { background: #7f1d1d; color: #fecaca; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #991b1b; transition: all 0.2s; }
+    .btn-danger:hover { background: #991b1b; }
+    .input-base { width: 100%; background: #1c1c1c; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: white; transition: all 0.2s; }
+    .input-base::placeholder { color: #6b7280; }
+    .input-base:focus { outline: none; box-shadow: 0 0 0 2px #d6781e; border-color: transparent; }
+    .card-base { background: #141414; border: 1px solid #2d2d2d; border-radius: 0.75rem; padding: 1.25rem; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: white; }
+    .stat-label { font-size: 0.625rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 500; }
+    .badge-active { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge-inactive { background: #1f2937; color: #9ca3af; }
+    .badge-warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-danger { background: rgba(244,63,94,0.15); color: #f43f5e; }
+    .badge-info { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+    .badge-bronze { background: rgba(205,127,50,0.15); color: #cd7f32; }
+    .badge-silver { background: rgba(192,192,192,0.15); color: #c0c0c0; }
+    .badge-gold { background: rgba(255,215,0,0.15); color: #ffd700; }
+    .badge-platinum { background: rgba(229,228,226,0.15); color: #e5e4e2; }
+    .tab-btn { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #9ca3af; border-radius: 0.5rem; transition: all 0.2s; }
+    .tab-btn:hover { color: white; background: #1c1c1c; }
+    .tab-btn-active { color: #d6781e; background: rgba(56,21,7,0.5); border-bottom: 2px solid #d6781e; }
+    .table-header { padding: 0.75rem 1rem; font-size: 0.625rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(20,20,20,0.5); position: sticky; top: 0; }
+    .table-cell { padding: 0.75rem 1rem; font-size: 0.875rem; color: #d1d5db; border-top: 1px solid #2d2d2d; }
+    .table-row { transition: background 0.2s; cursor: pointer; }
+    .table-row:hover { background: rgba(28,28,28,0.5); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal-panel { background: #0d0d0d; border: 1px solid #374151; border-radius: 1rem; max-width: 48rem; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.4s ease-out; }
+    .chart-container { position: relative; height: 16rem; width: 100%; }
+    .chart-container-lg { position: relative; height: 20rem; width: 100%; }
+    .kbd { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.125rem 0.375rem; background: #1c1c1c; border: 1px solid #374151; border-radius: 0.25rem; }
+    .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: 0.5rem; color: #9ca3af; transition: all 0.2s; }
+    .sidebar-link:hover { color: white; background: #1c1c1c; }
+    .sidebar-link-active { color: #d6781e; background: rgba(56,21,7,0.5); border-left: 2px solid #d6781e; }
+    .drop-zone { border: 2px dashed #374151; border-radius: 0.75rem; padding: 2rem; text-align: center; transition: all 0.2s; }
+    .drop-zone:hover { border-color: #d6781e; background: rgba(56,21,7,0.1); }
+    ::selection { background: rgba(214,120,30,0.3); color: white; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+    .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
+    .animate-slide-up { animation: slideUp 0.4s ease-out; }
+    .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+    
+    /* Tier progress bar */
+    .tier-progress { height: 6px; border-radius: 3px; background: #2d2d2d; overflow: hidden; }
+    .tier-progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease-out; }
+    
+    /* Copy button */
+    .copy-btn { position: relative; }
+    .copy-btn.copied::after { content: 'Copied!'; position: absolute; top: -1.5rem; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; white-space: nowrap; animation: fadeIn 0.2s; }
+  </style>
+</head>
+<body class="bg-surface-950 text-gray-100 min-h-screen bg-radial bg-grid">
+  <script>
+    window.__AFFILIATE_CONFIG__ = {
+      apiBase: '/api',
+      wsEndpoint: '/api/realtime/events'
+    };
+  </script>
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 bg-surface-900 border-r border-gray-800 flex flex-col transform transition-transform duration-300 lg:translate-x-0 -translate-x-full">
+      <div class="flex flex-col h-full">
+        <!-- Logo -->
+        <div class="p-5 border-b border-gray-800 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-chaos-500 to-chaos-700 flex items-center justify-center relative overflow-hidden">
+            <svg class="w-6 h-6 text-surface-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+          </div>
+          <div>
+            <h1 class="font-bold text-white text-lg">Affiliate Panel</h1>
+            <p class="text-xs text-gray-500 font-mono">Chaos C2 Partner Program</p>
+          </div>
+        </div>
+
+        <!-- Affiliate Info Bar -->
+        <div id="affiliateInfoBar" class="p-4 border-b border-gray-800 hidden">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-chaos-500 to-chaos-700 flex items-center justify-center text-surface-950 font-bold text-lg" id="avatarInitial">U</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-white truncate" id="affiliateUsername">Username</p>
+              <p class="text-xs text-gray-500 font-mono" id="affiliateTier">Bronze</p>
+            </div>
+            <span id="tierBadge" class="badge badge-bronze">Bronze</span>
+          </div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-gray-500">Tier Progress</span>
+              <span class="text-chaos-400 font-mono" id="tierProgressText">0 / $1,000</span>
+            </div>
+            <div class="tier-progress">
+              <div id="tierProgressFill" class="tier-progress-fill bg-chaos-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav id="navLinks" class="flex-1 p-4 space-y-1 overflow-y-auto hidden" role="navigation" aria-label="Main navigation">
+          <a href="#" class="sidebar-link sidebar-link-active" data-view="dashboard" onclick="showView('dashboard'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="referrals" onclick="showView('referrals'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span>Referrals</span>
+            <span id="referralsBadge" class="ml-auto badge badge-info hidden">0</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="earnings" onclick="showView('earnings'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Earnings</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="payouts" onclick="showView('payouts'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Payouts</span>
+            <span id="payoutsBadge" class="ml-auto badge badge-warning hidden">Pending</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="campaigns" onclick="showView('campaigns'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <span>My Campaigns</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="settings" onclick="showView('settings'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <!-- Login Prompt (when not logged in) -->
+        <div id="loginPrompt" class="p-4 border-t border-gray-800">
+          <div class="text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <h3 class="text-lg font-semibold mb-2">Welcome Partner</h3>
+            <p class="text-sm text-gray-500 mb-4">Sign in to access your affiliate dashboard</p>
+            <button class="btn-primary w-full" onclick="openAuthModal('login')">Sign In</button>
+            <button class="btn-secondary w-full mt-2" onclick="openAuthModal('register')">Create Account</button>
+          </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="p-4 border-t border-gray-800">
+          <div class="flex items-center gap-3">
+            <div id="connIndicator" class="w-2.5 h-2.5 rounded-full bg-gray-600"></div>
+            <div class="flex-1">
+              <p class="text-xs font-medium text-gray-300">Connection</p>
+              <p id="connStatus" class="text-xs text-gray-500">Disconnected</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 min-h-screen flex flex-col">
+      <!-- Top Bar -->
+      <header class="bg-surface-900/80 backdrop-blur-xl border-b border-gray-800 sticky top-0 z-20">
+        <div class="flex items-center justify-between h-16 px-4 sm:px-6">
+          <div class="flex items-center gap-4">
+            <button class="lg:hidden p-2 rounded-lg hover:bg-surface-800" onclick="toggleSidebar()">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <h2 id="viewTitle" class="text-lg font-semibold text-white hidden sm:block">Dashboard</h2>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <!-- Time Range -->
+            <select id="timeRange" class="input-base w-auto py-1.5 text-sm" onchange="refreshView()">
+              <option value="24h">24 Hours</option>
+              <option value="7d" selected>7 Days</option>
+              <option value="30d">30 Days</option>
+              <option value="90d">90 Days</option>
+            </select>
+
+            <!-- Refresh Button -->
+            <button id="refreshBtn" class="btn-secondary" onclick="refreshView()">
+              <svg class="w-4 h-4 mr-1" id="refreshIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+
+            <!-- User Menu -->
+            <div id="userMenu" class="flex items-center gap-3 hidden">
+              <div class="hidden sm:block text-right">
+                <p class="text-xs text-gray-500">Pending Earnings</p>
+                <p id="topbarPending" class="font-mono text-chaos-400 font-semibold">$0.00</p>
+              </div>
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-chaos-500 to-chaos-700 flex items-center justify-center text-surface-950 font-bold" id="userAvatar">U</div>
+              <button class="btn-ghost text-xs hidden sm:block" onclick="showView('settings')">Settings</button>
+              <button class="btn-ghost text-xs" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Auth Button (when not logged in) -->
+            <button id="authBtn" class="btn-primary" onclick="openAuthModal('login')">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              <span>Sign In</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- View Tabs (Mobile) -->
+      <div class="lg:hidden overflow-x-auto px-3 py-2 border-b border-gray-800" id="mobileTabs">
+        <button class="tab-btn tab-btn-active whitespace-nowrap" data-view="dashboard" onclick="showView('dashboard')">Dashboard</button>
+        <button class="tab-btn whitespace-nowrap" data-view="referrals" onclick="showView('referrals')">Referrals</button>
+        <button class="tab-btn whitespace-nowrap" data-view="earnings" onclick="showView('earnings')">Earnings</button>
+        <button class="tab-btn whitespace-nowrap" data-view="payouts" onclick="showView('payouts')">Payouts</button>
+        <button class="tab-btn whitespace-nowrap" data-view="campaigns" onclick="showView('campaigns')">Campaigns</button>
+        <button class="tab-btn whitespace-nowrap" data-view="settings" onclick="showView('settings')">Settings</button>
+      </div>
+
+      <!-- View Content -->
+      <div class="flex-1 overflow-auto p-4 sm:p-6" id="viewContent">
+        <!-- Views rendered dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div id="modalRoot"></div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <!-- Chart.js Default Config -->
+  <script>
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.font.family = 'Inter';
+    Chart.defaults.borderColor = '#2d2d2d';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.padding = 20;
+    Chart.defaults.plugins.tooltip.backgroundColor = '#1c1c1c';
+    Chart.defaults.plugins.tooltip.borderColor = '#2d2d2d';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.plugins.tooltip.titleFont.size = 13;
+    Chart.defaults.plugins.tooltip.bodyFont.size = 12;
+    Chart.defaults.plugins.tooltip.bodyFont.family = 'JetBrains Mono';
+    Chart.defaults.scales.x.grid.color = '#2d2d2d';
+    Chart.defaults.scales.y.grid.color = '#2d2d2d';
+  </script>
+
+  <!-- Main App Script -->
+  <script src="/affiliate-app.js"></script>
+</body>
+</html>

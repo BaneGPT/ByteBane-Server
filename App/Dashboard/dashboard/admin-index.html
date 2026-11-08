@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaos C2 - Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            chaos: { 50: '#fdf8f0', 100: '#faebe0', 200: '#f4d3b5', 300: '#eab778', 400: '#e09542', 500: '#d6781e', 600: '#c45f15', 700: '#a04512', 800: '#813713', 900: '#683013', 950: '#381507' },
+            acc: { emerald: '#10b981', emeraldDim: 'rgba(16,185,129,0.15)', amber: '#f59e0b', amberDim: 'rgba(245,158,11,0.15)', rose: '#f43f5e', roseDim: 'rgba(244,63,94,0.15)', sky: '#0ea5e9', skyDim: 'rgba(14,165,233,0.15)', violet: '#8b5cf6', violetDim: 'rgba(139,92,246,0.15)', cyan: '#06b6d4', cyanDim: 'rgba(6,182,212,0.15)' },
+            surface: { 950: '#050505', 900: '#0d0d0d', 850: '#141414', 800: '#1c1c1c', 750: '#242424', 700: '#2d2d2d' }
+          },
+          fontFamily: { mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'], sans: ['Inter', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .bg-grid { background-image: linear-gradient(rgba(214,120,30,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(214,120,30,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+    .bg-radial { background: radial-gradient(ellipse at 50% 0%, rgba(214,120,30,0.08) 0%, transparent 70%), #050505; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #141414; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #4d4d4d; }
+    .glass { background: rgba(28,28,28,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(214,120,30,0.1); }
+    .glass-hover:hover { border-color: rgba(214,120,30,0.3); box-shadow: 0 0 30px -10px rgba(214,120,30,0.15); }
+    .btn-primary { background: #c45f15; color: white; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; transition: all 0.2s; }
+    .btn-primary:hover { background: #d6781e; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: #1c1c1c; color: #e5e5e5; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #374151; transition: all 0.2s; }
+    .btn-secondary:hover { background: #242424; }
+    .btn-ghost { color: #9ca3af; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; transition: all 0.2s; }
+    .btn-ghost:hover { color: white; background: #1c1c1c; }
+    .btn-danger { background: #7f1d1d; color: #fecaca; font-weight: 500; border-radius: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #991b1b; transition: all 0.2s; }
+    .btn-danger:hover { background: #991b1b; }
+    .input-base { width: 100%; background: #1c1c1c; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.5rem 0.75rem; color: white; transition: all 0.2s; }
+    .input-base::placeholder { color: #6b7280; }
+    .input-base:focus { outline: none; box-shadow: 0 0 0 2px #d6781e; border-color: transparent; }
+    .card-base { background: #141414; border: 1px solid #2d2d2d; border-radius: 0.75rem; padding: 1.25rem; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: white; }
+    .stat-label { font-size: 0.625rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 500; }
+    .badge-active { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge-inactive { background: #1f2937; color: #9ca3af; }
+    .badge-warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-danger { background: rgba(244,63,94,0.15); color: #f43f5e; }
+    .badge-info { background: rgba(14,165,233,0.15); color: #0ea5e9; }
+    .badge-starter { background: rgba(107,114,128,0.15); color: #9ca3af; }
+    .badge-professional { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge-business { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+    .badge-enterprise { background: rgba(214,120,30,0.15); color: #d6781e; }
+    .tab-btn { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #9ca3af; border-radius: 0.5rem; transition: all 0.2s; }
+    .tab-btn:hover { color: white; background: #1c1c1c; }
+    .tab-btn-active { color: #d6781e; background: rgba(56,21,7,0.5); border-bottom: 2px solid #d6781e; }
+    .table-header { padding: 0.75rem 1rem; font-size: 0.625rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(20,20,20,0.5); position: sticky; top: 0; }
+    .table-cell { padding: 0.75rem 1rem; font-size: 0.875rem; color: #d1d5db; border-top: 1px solid #2d2d2d; }
+    .table-row { transition: background 0.2s; cursor: pointer; }
+    .table-row:hover { background: rgba(28,28,28,0.5); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal-panel { background: #0d0d0d; border: 1px solid #374151; border-radius: 1rem; max-width: 48rem; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.4s ease-out; }
+    .chart-container { position: relative; height: 16rem; width: 100%; }
+    .chart-container-lg { position: relative; height: 20rem; width: 100%; }
+    .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: 0.5rem; color: #9ca3af; transition: all 0.2s; }
+    .sidebar-link:hover { color: white; background: #1c1c1c; }
+    .sidebar-link-active { color: #d6781e; background: rgba(56,21,7,0.5); border-left: 2px solid #d6781e; }
+    ::selection { background: rgba(214,120,30,0.3); color: white; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+    .animate-slide-up { animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-surface-950 text-gray-100 min-h-screen bg-radial bg-grid">
+  <script>
+    window.__ADMIN_CONFIG__ = { apiBase: '/api' };
+  </script>
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 bg-surface-900 border-r border-gray-800 flex flex-col transform transition-transform duration-300 lg:translate-x-0 -translate-x-full">
+      <div class="flex flex-col h-full">
+        <div class="p-5 border-b border-gray-800 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-chaos-500 to-chaos-700 flex items-center justify-center relative overflow-hidden">
+            <svg class="w-6 h-6 text-surface-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+          </div>
+          <div>
+            <h1 class="font-bold text-white text-lg">Chaos C2 Admin</h1>
+            <p class="text-xs text-gray-500 font-mono">Multi-Tenant Management</p>
+          </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto" role="navigation" aria-label="Admin navigation">
+          <a href="#" class="sidebar-link sidebar-link-active" data-view="overview" onclick="showView('overview'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span>Overview</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="tenants" onclick="showView('tenants'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            <span>Tenants</span>
+            <span id="tenantCountBadge" class="ml-auto badge badge-info">0</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="payments" onclick="showView('payments'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Payments</span>
+            <span id="paymentCountBadge" class="ml-auto badge badge-warning">0</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="affiliates" onclick="showView('affiliates'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span>All Affiliates</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="campaigns" onclick="showView('campaigns'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <span>All Campaigns</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="analytics" onclick="showView('analytics'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span>Analytics</span>
+          </a>
+          <a href="#" class="sidebar-link" data-view="settings" onclick="showView('settings'); return false;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800">
+          <div class="flex items-center gap-3">
+            <div id="connIndicator" class="w-2.5 h-2.5 rounded-full bg-acc-emerald"></div>
+            <div class="flex-1">
+              <p class="text-xs font-medium text-gray-300">System Status</p>
+              <p id="connStatus" class="text-xs text-gray-500">Connected</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 min-h-screen flex flex-col">
+      <header class="bg-surface-900/80 backdrop-blur-xl border-b border-gray-800 sticky top-0 z-20">
+        <div class="flex items-center justify-between h-16 px-4 sm:px-6">
+          <div class="flex items-center gap-4">
+            <button class="lg:hidden p-2 rounded-lg hover:bg-surface-800" onclick="toggleSidebar()">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <h2 id="viewTitle" class="text-lg font-semibold text-white hidden sm:block">Overview</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="timeRange" class="input-base w-auto py-1.5 text-sm" onchange="refreshView()">
+              <option value="24h">24 Hours</option>
+              <option value="7d" selected>7 Days</option>
+              <option value="30d">30 Days</option>
+              <option value="90d">90 Days</option>
+            </select>
+            <button id="refreshBtn" class="btn-secondary" onclick="refreshView()">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-chaos-500 to-chaos-700 flex items-center justify-center text-surface-950 font-bold">A</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="lg:hidden overflow-x-auto px-3 py-2 border-b border-gray-800" id="mobileTabs">
+        <button class="tab-btn tab-btn-active whitespace-nowrap" data-view="overview" onclick="showView('overview')">Overview</button>
+        <button class="tab-btn whitespace-nowrap" data-view="tenants" onclick="showView('tenants')">Tenants</button>
+        <button class="tab-btn whitespace-nowrap" data-view="payments" onclick="showView('payments')">Payments</button>
+        <button class="tab-btn whitespace-nowrap" data-view="affiliates" onclick="showView('affiliates')">Affiliates</button>
+        <button class="tab-btn whitespace-nowrap" data-view="campaigns" onclick="showView('campaigns')">Campaigns</button>
+        <button class="tab-btn whitespace-nowrap" data-view="analytics" onclick="showView('analytics')">Analytics</button>
+        <button class="tab-btn whitespace-nowrap" data-view="settings" onclick="showView('settings')">Settings</button>
+      </div>
+
+      <div class="flex-1 overflow-auto p-4 sm:p-6" id="viewContent"></div>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.font.family = 'Inter';
+    Chart.defaults.borderColor = '#2d2d2d';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.padding = 20;
+    Chart.defaults.plugins.tooltip.backgroundColor = '#1c1c1c';
+    Chart.defaults.plugins.tooltip.borderColor = '#2d2d2d';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.plugins.tooltip.titleFont.size = 13;
+    Chart.defaults.plugins.tooltip.bodyFont.size = 12;
+    Chart.defaults.plugins.tooltip.bodyFont.family = 'JetBrains Mono';
+    Chart.defaults.scales.x.grid.color = '#2d2d2d';
+    Chart.defaults.scales.y.grid.color = '#2d2d2d';
+  </script>
+  <script src="/admin-app.js"></script>
+</body>
+</html>
